@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Wild Unknown Tarot</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#0a0a0f;
+    --surface:#111118;
+    --card-bg:#13131c;
+    --border:#2a2a3a;
+    --purple:#7c5cbf;
+    --purple-light:#a87fd4;
+    --purple-glow:rgba(124,92,191,0.15);
+    --white:#e8e4f0;
+    --muted:#8a8a9a;
+    --gold:#c9a84c;
+  }
+  body{background:var(--bg);color:var(--white);font-family:'Lato',sans-serif;min-height:100vh;overflow-x:hidden}
+  
+  #home{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem}
+  .site-title{font-family:'Cinzel Decorative',serif;font-size:clamp(1.4rem,4vw,2.8rem);color:var(--white);text-align:center;letter-spacing:0.15em;margin-bottom:0.3rem}
+  .site-subtitle{font-family:'Cinzel',serif;font-size:0.85rem;color:var(--muted);letter-spacing:0.3em;text-align:center;margin-bottom:3rem;text-transform:uppercase}
+  
+  .piles-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1.5rem;width:100%;max-width:900px}
+  .pile{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:2rem 1rem;text-align:center;cursor:pointer;transition:all 0.3s;position:relative;overflow:hidden}
+  .pile::before{content:'';position:absolute;inset:0;background:var(--purple-glow);opacity:0;transition:opacity 0.3s}
+  .pile:hover::before{opacity:1}
+  .pile:hover{border-color:var(--purple);transform:translateY(-4px)}
+  .pile-symbol{font-size:2.5rem;margin-bottom:0.8rem;display:block}
+  .pile-name{font-family:'Cinzel',serif;font-size:0.95rem;color:var(--white);letter-spacing:0.1em;margin-bottom:0.4rem}
+  .pile-count{font-size:0.75rem;color:var(--muted);letter-spacing:0.05em}
+  
+  .divider{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--purple),transparent);margin:2.5rem auto}
+  
+  #pile-view,#card-view{display:none;min-height:100vh;padding:1.5rem}
+  
+  .back-btn{background:none;border:1px solid var(--border);color:var(--muted);font-family:'Cinzel',serif;font-size:0.8rem;letter-spacing:0.1em;padding:0.5rem 1.2rem;border-radius:20px;cursor:pointer;margin-bottom:1.5rem;transition:all 0.2s}
+  .back-btn:hover{border-color:var(--purple);color:var(--purple-light)}
+  
+  .pile-title{font-family:'Cinzel Decorative',serif;font-size:clamp(1.2rem,3vw,2rem);color:var(--white);text-align:center;margin-bottom:0.3rem}
+  .pile-desc{font-size:0.85rem;color:var(--muted);text-align:center;margin-bottom:2rem;max-width:500px;margin-left:auto;margin-right:auto}
+  
+  .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:1rem;max-width:1000px;margin:0 auto}
+  .card-thumb{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:1.2rem 0.8rem;text-align:center;cursor:pointer;transition:all 0.3s}
+  .card-thumb:hover{border-color:var(--purple);background:#18182a}
+  .card-thumb-symbol{font-size:1.8rem;margin-bottom:0.5rem;display:block}
+  .card-thumb-name{font-family:'Cinzel',serif;font-size:0.72rem;color:var(--white);letter-spacing:0.05em;line-height:1.3}
+  .card-thumb-num{font-size:0.65rem;color:var(--muted);margin-top:0.2rem}
+  
+  #card-view{max-width:800px;margin:0 auto}
+  .card-header{text-align:center;margin-bottom:2rem}
+  .card-big-symbol{font-size:4rem;margin-bottom:0.5rem;display:block}
+  .card-name{font-family:'Cinzel Decorative',serif;font-size:clamp(1.4rem,4vw,2.2rem);color:var(--white);margin-bottom:0.3rem}
+  .card-arcana{font-family:'Cinzel',serif;font-size:0.75rem;color:var(--purple-light);letter-spacing:0.3em;text-transform:uppercase;margin-bottom:1rem}
+  
+  .card-visual{background:var(--card-bg);border:2px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:1.5rem;text-align:center;position:relative}
+  .card-illustration{font-size:5rem;display:block;margin-bottom:1rem;filter:grayscale(30%)}
+  .card-art-desc{font-size:0.82rem;color:var(--muted);font-style:italic;line-height:1.6;max-width:400px;margin:0 auto}
+  
+  .symbol-meaning{display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center;margin-top:1rem}
+  .sym-tag{background:#1a1a2e;border:1px solid var(--border);border-radius:20px;padding:0.3rem 0.8rem;font-size:0.72rem;color:var(--purple-light)}
+  
+  .corr-row{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin-bottom:1.5rem}
+  .corr-chip{background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:0.5rem 1rem;font-size:0.75rem;text-align:center}
+  .corr-label{color:var(--muted);display:block;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.2rem}
+  .corr-value{color:var(--white);font-family:'Cinzel',serif}
+  
+  .meanings-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}
+  @media(max-width:520px){.meanings-grid{grid-template-columns:1fr}}
+  
+  .meaning-section{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:1.2rem}
+  .meaning-icon{font-size:1.2rem;margin-bottom:0.4rem;display:block}
+  .meaning-cat{font-family:'Cinzel',serif;font-size:0.7rem;color:var(--purple-light);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.6rem}
+  .meaning-upright{font-size:0.8rem;color:var(--white);line-height:1.5;margin-bottom:0.8rem}
+  .meaning-reversed-label{font-size:0.65rem;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.3rem}
+  .meaning-reversed{font-size:0.78rem;color:var(--muted);line-height:1.5;font-style:italic}
+  
+  .learn-section{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin-bottom:1.5rem}
+  .learn-title{font-family:'Cinzel',serif;font-size:0.8rem;color:var(--gold);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.8rem}
+  .learn-text{font-size:0.82rem;color:var(--white);line-height:1.7}
+  
+  .full-width-section{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin-bottom:1rem}
+  
+  .toggle-wrap{display:flex;gap:0.5rem;justify-content:center;margin-bottom:1rem}
+  .toggle-btn{background:none;border:1px solid var(--border);color:var(--muted);font-family:'Cinzel',serif;font-size:0.72rem;letter-spacing:0.1em;padding:0.4rem 1rem;border-radius:20px;cursor:pointer;transition:all 0.2s}
+  .toggle-btn.active{border-color:var(--purple);color:var(--white);background:var(--purple-glow)}
+  
+  .stars{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0}
+  .star{position:absolute;width:2px;height:2px;background:white;border-radius:50%;opacity:0.3}
+  
+  #home,#pile-view,#card-view{position:relative;z-index:1}
+
+  .moon-deco{font-size:1.2rem;color:var(--muted);margin:0 0.5rem}
+  .header-deco{display:flex;align-items:center;justify-content:center;margin-bottom:0.5rem}
+</style>
+</head>
+<body>
+
+<canvas class="stars" id="starCanvas"></canvas>
+
+<div id="home">
+  <div class="header-deco">
+    <span class="moon-deco">☽</span>
+    <span style="font-family:'Cinzel',serif;font-size:0.7rem;color:var(--muted);letter-spacing:0.4em">THE WILD UNKNOWN</span>
+    <span class="moon-deco">☾</span>
+  </div>
+  <h1 class="site-title">Tarot</h1>
+  <p class="site-subtitle">A complete guide to all 78 cards</p>
+  
+  <div class="piles-grid">
+    <div class="pile" onclick="showPile('major')">
+      <span class="pile-symbol">☀</span>
+      <div class="pile-name">Major Arcana</div>
+      <div class="pile-count">22 cards · The great journey</div>
+    </div>
+    <div class="pile" onclick="showPile('cups')">
+      <span class="pile-symbol">◎</span>
+      <div class="pile-name">Cups</div>
+      <div class="pile-count">14 cards · Water · Emotion</div>
+    </div>
+    <div class="pile" onclick="showPile('wands')">
+      <span class="pile-symbol">⌿</span>
+      <div class="pile-name">Wands</div>
+      <div class="pile-count">14 cards · Fire · Passion</div>
+    </div>
+    <div class="pile" onclick="showPile('pentacles')">
+      <span class="pile-symbol">✦</span>
+      <div class="pile-name">Pentacles</div>
+      <div class="pile-count">14 cards · Earth · Material</div>
+    </div>
+    <div class="pile" onclick="showPile('swords')">
+      <span class="pile-symbol">✧</span>
+      <div class="pile-name">Swords</div>
+      <div class="pile-count">14 cards · Air · Mind</div>
+    </div>
+  </div>
+  
+  <div class="divider"></div>
+  <p style="font-size:0.75rem;color:var(--muted);text-align:center;max-width:400px;line-height:1.7">
+    The Wild Unknown uses animals and nature as its language.<br>Every creature, root, and moon carries meaning.
+  </p>
+</div>
+
+<div id="pile-view">
+  <button class="back-btn" onclick="showHome()">← Back to Piles</button>
+  <h2 class="pile-title" id="pile-view-title"></h2>
+  <p class="pile-desc" id="pile-view-desc"></p>
+  <div class="cards-grid" id="cards-grid"></div>
+</div>
+
+<div id="card-view">
+  <button class="back-btn" id="card-back-btn" onclick="backToPile()">← Back</button>
+  <div class="card-header">
+    <span class="card-big-symbol" id="cv-symbol"></span>
+    <h2 class="card-name" id="cv-name"></h2>
+    <div class="card-arcana" id="cv-arcana"></div>
+  </div>
+  
+  <div class="card-visual">
+    <span class="card-illustration" id="cv-art"></span>
+    <div class="card-art-desc" id="cv-art-desc"></div>
+    <div class="symbol-meaning" id="cv-symbols"></div>
+  </div>
+  
+  <div class="corr-row" id="cv-corr"></div>
+  
+  <div class="learn-section">
+    <div class="learn-title">🌿 How to Remember This Card</div>
+    <div class="learn-text" id="cv-memory"></div>
+  </div>
+  
+  <div class="toggle-wrap">
+    <button class="toggle-btn active" id="btn-upright" onclick="setMode('upright')">Upright</button>
+    <button class="toggle-btn" id="btn-reversed" onclick="setMode('reversed')">Reversed</button>
+  </div>
+  
+  <div class="meanings-grid" id="cv-meanings"></div>
+</div>
+
+<script>
+const PILES = {
+  major:{name:"Major Arcana",symbol:"☀",desc:"The 22 Major Arcana cards represent life's great spiritual lessons — archetypal forces, cosmic energies, and the soul's journey from innocence (The Fool) to integration (The World). When a Major Arcana appears, pay close attention."},
+  cups:{name:"Cups",symbol:"◎",desc:"Cups correspond to the element Water and the realm of emotion, intuition, relationships, and the inner world. In The Wild Unknown, cups often feature birds, water creatures, and lunar imagery. They ask: what do you feel?"},
+  wands:{name:"Wands",symbol:"⌿",desc:"Wands correspond to Fire and the realm of passion, creativity, ambition, and will. In The Wild Unknown, wands are living branches full of leaves and snakes. They ask: what drives you?"},
+  pentacles:{name:"Pentacles",symbol:"✦",desc:"Pentacles correspond to Earth and the realm of the material — money, work, health, and the physical world. The Wild Unknown renders them as geometric stars amid roots and soil. They ask: what have you built?"},
+  swords:{name:"Swords",symbol:"✧",desc:"Swords correspond to Air and the realm of the mind — thought, conflict, truth, and clarity. In The Wild Unknown, swords cut through dark skies with stark black-and-white imagery. They ask: what do you know?"}
+};
+
+const CARDS = [
+  {id:"major-0",pile:"major",name:"The Fool",num:"0",symbol:"🦋",art:"🦋",
+   artDesc:"A butterfly hovers at the edge of a branch, wings spread, about to leap into open air. The butterfly has just emerged from its chrysalis — it doesn't yet know if it can fly.",
+   symbols:["Butterfly: transformation, new life","Open air: limitless possibility","Edge: the moment before the leap"],
+   corr:[["Element","Air"],["Planet","Uranus"],["Yes/No","Yes"]],
+   memory:"The butterfly just hatched. It has never flown. It stands at the edge, totally open, ready. That is The Fool — pure potential, zero fear. When you see a butterfly poised to leap, remember: beginnings require innocence.",
+   upright:{general:"New beginnings, spontaneity, innocence, a leap of faith. The universe is saying 'go.'",love:"Open-hearted new romance, playful connection, adventure in love. Say yes to the unexpected.",career:"A bold new venture, fresh start, new job. Trust your instincts even without a plan.",finance:"Spontaneous opportunities, optimistic spending. Don't overthink — act, but stay aware of cliffs.",feelings:"Excited, free, childlike, hopeful. Pure joy without baggage.",actions:"Take the leap. Start now. Don't wait for permission."},
+   reversed:{general:"Recklessness, poor planning, naivety taken too far. Look before you leap.",love:"Rushing in, ignoring red flags, fear of commitment.",career:"Unrealistic plans, jumping without preparation. Finish what you started.",finance:"Impulsive purchases, careless with money. Make a plan first.",feelings:"Anxious, scattered, avoidant of responsibility.",actions:"Pause. Ground yourself. What are you running from?"}},
+
+  {id:"major-1",pile:"major",name:"The Magician",num:"I",symbol:"⚡",art:"⚡",
+   artDesc:"A tiger stands in the center — powerful, alert, commanding. Above it, all four elements are present. The tiger knows exactly what it has. It uses everything.",
+   symbols:["Tiger: raw power, mastery","Four tools: all resources available","Upward posture: channeling energy"],
+   corr:[["Element","Air+Fire"],["Planet","Mercury"],["Yes/No","Yes"]],
+   memory:"The tiger has claws, speed, and intelligence — all the tools. The Magician means YOU have everything you need. The tiger doesn't doubt. It acts.",
+   upright:{general:"Willpower, skill, resourcefulness. You have all the tools. Use them.",love:"Magnetic attraction, confident pursuit. You know what you want and how to get it.",career:"Taking initiative, using your skills masterfully. A project you lead will succeed.",finance:"Making things happen financially. Your willpower + skill = material success.",feelings:"Confident, capable, in your power.",actions:"Take deliberate action. Channel your energy toward one focused goal."},
+   reversed:{general:"Manipulation, untapped potential, trickery. Are you misusing your power?",love:"Manipulation, deception in romance. Check for hidden agendas.",career:"Poor planning, scattered energy, misuse of talents.",finance:"Schemes backfiring, poor financial decisions from overconfidence.",feelings:"Frustrated, blocked, feeling powerless despite having resources.",actions:"Get honest. Are you manipulating or being manipulated?"}},
+
+  {id:"major-2",pile:"major",name:"The High Priestess",num:"II",symbol:"🌙",art:"🌙",
+   artDesc:"An owl sits perfectly still in darkness, eyes wide open. The owl sees what others cannot. It is night — yet the owl is fully awake, fully aware.",
+   symbols:["Owl: wisdom, mystery, night vision","Darkness: the unconscious, the unseen","Still posture: patience, knowing"],
+   corr:[["Element","Water"],["Planet","Moon"],["Yes/No","Wait"]],
+   memory:"The owl doesn't chase. It waits and watches. It knows things without being told. That is the High Priestess — inner knowing, silence, mystery. When you see the owl, go inward.",
+   upright:{general:"Intuition, mystery, the unconscious. Your inner voice holds the answer. Be still.",love:"A deep, spiritual connection. Don't rush — let things unfold. Trust your gut about this person.",career:"Trust your instincts at work. Hidden information will reveal itself. Wait before deciding.",finance:"Not everything is visible yet. Gather information quietly before acting.",feelings:"Calm, knowing, deeply intuitive, slightly withdrawn.",actions:"Meditate. Journal. Listen to dreams. The answer is already inside you."},
+   reversed:{general:"Secrets, disconnection from intuition, ignoring inner wisdom.",love:"Hidden feelings, not being honest about what you truly want.",career:"Ignoring gut feelings that are warning you. Information is being withheld.",finance:"Secrets around finances. Something isn't adding up — investigate.",feelings:"Confused, cut off from your own feelings, anxious.",actions:"Reconnect with yourself. Stop outsourcing your knowing to others."}},
+
+  {id:"major-3",pile:"major",name:"The Empress",num:"III",symbol:"🌿",art:"🌿",
+   artDesc:"A hen nests among lush foliage, eggs beneath her — a mother in abundance. Everything around her grows and blooms. She radiates warmth, fertility, and earthy love.",
+   symbols:["Hen: nurturing, motherhood, fertility","Eggs: potential, creation","Foliage: abundance, growth, nature"],
+   corr:[["Element","Earth"],["Planet","Venus"],["Yes/No","Yes"]],
+   memory:"The mother hen doesn't force growth — she creates warmth and lets life unfold naturally. The Empress is this energy: nurture, abundance, creation. When you see the nesting hen, ask: what am I cultivating?",
+   upright:{general:"Abundance, fertility, creativity, sensuality. Nature is saying yes. Let things grow.",love:"Deep nurturing love, sensuality, a relationship that feels like home.",career:"Creative projects bloom. Your work feels nourishing. A time of abundance.",finance:"Financial growth, abundance mindset. Money flows when you align with your values.",feelings:"Warm, nurtured, sensual, creative, motherly.",actions:"Create. Nurture. Let your garden grow without forcing it."},
+   reversed:{general:"Neglect, creative block, smothering, scarcity mindset.",love:"Codependency, over-nurturing, or feeling emotionally starved.",career:"Creative blocks, not valuing your own work, burned out from over-giving.",finance:"Financial neglect or overspending on others at your own expense.",feelings:"Depleted, blocked, disconnected from beauty and pleasure.",actions:"Nourish yourself first. You cannot pour from an empty vessel."}},
+
+  {id:"major-4",pile:"major",name:"The Emperor",num:"IV",symbol:"🦅",art:"🦅",
+   artDesc:"A ram stands on a mountain peak, surveying everything below. Ancient, solid, immovable. The mountain is his throne. His gaze says: I have built this, and it will endure.",
+   symbols:["Ram: authority, stubbornness, leadership","Mountain: stability, achievement, high vantage","Peak: mastery, rulership"],
+   corr:[["Element","Fire"],["Planet","Aries/Mars"],["Yes/No","Yes"]],
+   memory:"The ram doesn't ask permission to stand on the mountain. He climbed it. The Emperor energy is that earned authority — structure, leadership, strength. When you see the ram at the peak, think: discipline creates freedom.",
+   upright:{general:"Authority, structure, stability, leadership. Time to build with intention and discipline.",love:"A stable, committed partner. Masculine energy. Security and reliability in love.",career:"Leading with confidence, establishing systems, career advancement through discipline.",finance:"Financial stability through planning. The time to create a budget and stick to it.",feelings:"Grounded, secure, authoritative, perhaps rigid.",actions:"Take charge. Create structure. Be the leader of your own life."},
+   reversed:{general:"Tyranny, rigidity, loss of control, domination.",love:"Controlling behavior, power imbalances, rigidity in relationships.",career:"Authoritarian workplace, misuse of power, being too rigid to adapt.",finance:"Financial control issues, overspending on status, inflexibility.",feelings:"Stubborn, domineering, power-hungry, or conversely: powerless.",actions:"Loosen control. Examine where rigidity is hurting you and others."}},
+
+  {id:"major-5",pile:"major",name:"The Hierophant",num:"V",symbol:"🌲",art:"🌲",
+   artDesc:"Two trees stand side by side, their roots intertwined deep underground — ancient trees that have been here long before us. They embody tradition, shared roots, and sacred knowledge passed down through generations.",
+   symbols:["Two trees: tradition, duality, teacher-student","Intertwined roots: shared foundation, lineage","Ancient growth: wisdom of time"],
+   corr:[["Element","Earth"],["Planet","Taurus/Venus"],["Yes/No","Yes"]],
+   memory:"These trees have stood for centuries. They carry the wisdom of everything that came before. The Hierophant asks: what traditions, teachers, or belief systems guide you? What roots are you growing from?",
+   upright:{general:"Tradition, institutions, spiritual guidance, conformity. There is wisdom in established structures.",love:"Traditional commitment, conventional relationships, marriage, shared values.",career:"Following a mentor, working within institutions, conventional career paths.",finance:"Conservative, traditional financial approach. Seek expert advice.",feelings:"Grounded in belief, seeking belonging, respectful.",actions:"Seek a teacher. Honor your roots. Follow proven paths for now."},
+   reversed:{general:"Rebellion, questioning tradition, personal spiritual path over dogma.",love:"Unconventional relationship, breaking from family expectations.",career:"Bucking the system, starting your own path, challenging norms.",finance:"Breaking from conventional financial wisdom — for better or worse.",feelings:"Rebellious, questioning, seeking your own truth.",actions:"Question what you've been told. Find your own spiritual truth."}},
+
+  {id:"major-6",pile:"major",name:"The Lovers",num:"VI",symbol:"🦢",art:"🦢",
+   artDesc:"Two swans face each other, necks curved to form a heart. They are choosing each other — fully, consciously. In the background, light and shadow are equal.",
+   symbols:["Two swans: partnership, mirroring, choice","Heart shape: love through alignment","Equal light/shadow: the full spectrum of relationship"],
+   corr:[["Element","Air"],["Planet","Gemini/Mercury"],["Yes/No","Yes"]],
+   memory:"Swans mate for life — and they choose. They look directly at each other. The Lovers card isn't just about romance; it's about alignment and conscious choice. When you see the swan heart, ask: who or what am I choosing?",
+   upright:{general:"Union, alignment, a meaningful choice. A decision must be made from the heart.",love:"Deep romantic connection, soulmate energy, or a choice between two loves.",career:"Partnerships at work, aligning your work with your values.",finance:"Financial partnership, making a major financial choice from your heart.",feelings:"In love, aligned, harmonious, at peace with duality.",actions:"Choose consciously. Make the decision that aligns with your deepest values."},
+   reversed:{general:"Misalignment, poor choices, disharmony, temptation.",love:"Incompatibility, imbalance, a relationship out of sync.",career:"Misaligned with your work, the wrong partnership.",finance:"Bad financial partnerships, temptation to make the wrong choice.",feelings:"Torn, confused, out of alignment.",actions:"Examine what you are really choosing. What are you running toward — or from?"}},
+
+  {id:"major-7",pile:"major",name:"The Chariot",num:"VII",symbol:"🐎",art:"🐎",
+   artDesc:"A wild horse races forward, mane streaming, eyes determined. There is no rider shown — the power is the horse itself, harnessed and directed by sheer will. Speed with purpose.",
+   symbols:["Horse: raw energy, forward motion","Streaming mane: speed, momentum","No rider visible: inner control, willpower over instinct"],
+   corr:[["Element","Water"],["Planet","Cancer/Moon"],["Yes/No","Yes"]],
+   memory:"Wild horses are power without direction — until they choose to run toward something. The Chariot is your will commanding your instincts. You are the charioteer. Think: where am I racing, and is it where I intend to go?",
+   upright:{general:"Victory through willpower, discipline, forward momentum. Move with intention.",love:"Pursuing love with confidence. Overcoming obstacles for the relationship.",career:"Major career achievement, driven ambition, winning through hard work.",finance:"Financial victory through discipline. Stay focused and push through.",feelings:"Driven, determined, energized, victorious.",actions:"Keep going. Victory is near. Channel your willpower — don't scatter it."},
+   reversed:{general:"Loss of control, aggression, scattered energy, forced direction.",love:"Pushing too hard in love, controlling behavior, obstacles overwhelming.",career:"Stalled momentum, lack of direction, aggression at work.",finance:"Financial loss from loss of control or impulsivity.",feelings:"Aggressive, scattered, out of control.",actions:"Slow down. Redirect. Are you forcing something that isn't working?"}},
+
+  {id:"major-8",pile:"major",name:"Strength",num:"VIII",symbol:"🐍",art:"🐍",
+   artDesc:"A snake coils in a figure-eight — the symbol of infinity. It is neither attacked nor attacking. It simply is: patient, self-contained, powerful without force. There is no battle here.",
+   symbols:["Snake: primal instinct, kundalini energy, transformation","Figure-eight: infinity, integration of instinct and spirit","Coil: patience, contained power"],
+   corr:[["Element","Fire"],["Planet","Leo/Sun"],["Yes/No","Yes"]],
+   memory:"The snake could strike but doesn't. It has mastered itself. Strength in The Wild Unknown isn't brute force — it's integration: befriending your shadow, your fear, your instinct, and working WITH it. When you see the coiled snake, think: gentle mastery.",
+   upright:{general:"Inner strength, courage, patience, mastering instinct with compassion. You are stronger than you know.",love:"A relationship that requires patience and emotional courage. Love that tames through gentleness.",career:"Quiet confidence and endurance. Not forcing — achieving through persistence.",finance:"Steady, patient financial approach. Inner resources over outer pressure.",feelings:"Courageous, compassionate toward self, quietly powerful.",actions:"Meet your fear with compassion, not force. Breathe. You already have the strength."},
+   reversed:{general:"Self-doubt, weakness, cowardice, instinct out of control.",love:"Feeling weak, letting fear run the relationship.",career:"Giving up too early, letting self-doubt win, lacking courage.",finance:"Financial fears paralyzing action.",feelings:"Fearful, ashamed, self-destructive.",actions:"Reclaim your power. One small act of courage changes everything."}},
+
+  {id:"major-9",pile:"major",name:"The Hermit",num:"IX",symbol:"🦔",art:"🦔",
+   artDesc:"A hedgehog walks alone on a dark path, its body curled inward, lit from within. It carries its own light. It is not lost — it has withdrawn intentionally, carrying its wisdom inside.",
+   symbols:["Hedgehog: solitude, introspection, self-protection","Inner light: wisdom carried within","Dark path: the inner journey"],
+   corr:[["Element","Earth"],["Planet","Virgo/Mercury"],["Yes/No","Wait"]],
+   memory:"The hedgehog doesn't need the crowd. It curls up and lights itself from within. The Hermit isn't lonely — it's intentionally alone. When you see the hedgehog with its inner glow, know: the answer is in the silence within.",
+   upright:{general:"Solitude, introspection, inner wisdom, a necessary withdrawal. The light you seek is within.",love:"Time alone to understand what you truly want. A slow, thoughtful approach to love.",career:"Working alone, deep focus, mentorship, research phase.",finance:"Careful, conservative financial decisions made in quiet contemplation.",feelings:"Contemplative, wise, preferring solitude, spiritually searching.",actions:"Go within. Journal, meditate, or take a solo retreat. The answer is already there."},
+   reversed:{general:"Isolation, loneliness, withdrawal gone too far, refusing help.",love:"Cutting yourself off from love out of fear, unhealthy isolation.",career:"Too isolated from teamwork, refusing mentorship, paralysis in introspection.",finance:"Hoarding resources, refusing financial advice.",feelings:"Lonely, cut off, afraid to be seen.",actions:"Reconnect. You don't have to do this alone. Reach out."}},
+
+  {id:"major-10",pile:"major",name:"Wheel of Fortune",num:"X",symbol:"🕷",art:"🕷",
+   artDesc:"A spider sits at the center of its web, perfectly still. The web radiates outward in perfect geometry — a universe of its own making. The spider didn't choose where the fly lands. But it built the web.",
+   symbols:["Spider: fate, patience, creation","Web: the interconnected cycles of life","Center position: being at the hub of change"],
+   corr:[["Element","Fire"],["Planet","Jupiter"],["Yes/No","Yes"]],
+   memory:"The spider built the web, but cannot control what the wind brings. Wheel of Fortune: you set the conditions, but cycles turn on their own. When you see the spider's web, remember: some things are beyond your control — and that's okay.",
+   upright:{general:"Cycles, fate, destiny turning in your favor. A lucky shift. Change is inevitable.",love:"A fated encounter or relationship turning point. Destiny at work in love.",career:"A lucky break, a turning point, a cycle completing and a new one beginning.",finance:"Financial luck, a windfall, or a fortunate turn of events.",feelings:"Optimistic, hopeful, open to destiny.",actions:"Trust the flow. Recognize what is destined vs. what you can control."},
+   reversed:{general:"Bad luck, resistance to change, clinging to what's ending.",love:"Resisting natural changes in a relationship, fighting cycles.",career:"A downturn, bad timing, clinging to a role that's ending.",finance:"Financial setback, bad luck or poor timing in investments.",feelings:"Fatalistic, stuck, resentful of change.",actions:"Let go. What cycle is ending? Stop fighting the wheel turning."}},
+
+  {id:"major-11",pile:"major",name:"Justice",num:"XI",symbol:"⚖",art:"⚖",
+   artDesc:"Two swords cross in perfect X — balanced, equal, absolute. Between them, no emotion, no favoritism. Just the blade of truth. The Wild Unknown renders Justice as stark geometric precision: black and white, no grey.",
+   symbols:["Crossed swords: impartiality, cut of truth","Perfect balance: cause and effect","Black & white: no ambiguity, absolute clarity"],
+   corr:[["Element","Air"],["Planet","Libra/Venus"],["Yes/No","Maybe"]],
+   memory:"The swords don't care about your feelings. They cut true. Justice in this deck is not about emotions — it's about what is fair, what is earned, what is true. When you see the crossed blades, ask: what is the truth here, stripped of all bias?",
+   upright:{general:"Fairness, truth, cause and effect. You will receive exactly what you deserve — no more, no less.",love:"A balanced relationship, a fair resolution to conflict. What you give, you receive.",career:"Legal matters, fair outcomes, getting credit for your work.",finance:"Financial justice: debts paid, fair compensation, honest dealings.",feelings:"Clear-headed, balanced, seeking fairness.",actions:"Be honest. Take responsibility for your part. Fairness will follow."},
+   reversed:{general:"Injustice, dishonesty, avoiding accountability, bias.",love:"Unfair treatment in love, avoiding honest conversations.",career:"Injustice at work, dishonest dealings, legal complications.",finance:"Financial dishonesty, unfair compensation, legal financial trouble.",feelings:"Resentful, wronged, refusing to see your own responsibility.",actions:"Face the truth. Where are you being dishonest — with yourself or others?"}},
+
+  {id:"major-12",pile:"major",name:"The Hanged Man",num:"XII",symbol:"🦇",art:"🦇",
+   artDesc:"A bat hangs upside down from a branch, perfectly still. Its eyes are open. It chose this — it sees the world from a completely different angle. It is not trapped. It is waiting, perceiving, surrendering.",
+   symbols:["Bat: inversion, seeing differently, the night mind","Upside-down: surrender, new perspective","Branch: the support that holds you in this pause"],
+   corr:[["Element","Water"],["Planet","Neptune"],["Yes/No","Wait"]],
+   memory:"The bat hangs upside down and sees the world right. The Hanged Man is the same: total surrender, a complete shift in perspective. Nothing is happening externally — everything is shifting internally. When you see the bat, stop forcing. Let go.",
+   upright:{general:"Suspension, surrender, seeing things from a new angle. A necessary pause before breakthrough.",love:"A pause in the relationship that brings clarity. Letting go of expectations opens new understanding.",career:"Stalemate with unexpected wisdom. Step back — the answer will come when you stop forcing.",finance:"Financial pause; an investment of time rather than money.",feelings:"Reflective, suspended, at peace with uncertainty.",actions:"Surrender. Stop pushing. The pause IS the point. Let the shift happen."},
+   reversed:{general:"Resistance, martyrdom, refusing to let go of what no longer serves.",love:"Stuck in a victim pattern, sacrificing yourself unnecessarily.",career:"Stuck in a dead-end from refusal to shift perspective.",finance:"Financial stagnation from inflexibility.",feelings:"Martyred, stuck, resistant.",actions:"Let go of what you're clinging to. The suffering is optional."}},
+
+  {id:"major-13",pile:"major",name:"Death",num:"XIII",symbol:"🐍",art:"🐍",
+   artDesc:"A skeletal tree stands in winter — completely bare, every leaf fallen. But beneath the snow, the roots are alive. The tree is not dead. It is preparing. The Wild Unknown shows Death as nature's winter: necessary, complete, and secretly generative.",
+   symbols:["Bare tree: endings, stripping away","Winter: the necessary dark season","Hidden roots: what survives, what endures, what will return"],
+   corr:[["Element","Water"],["Planet","Scorpio/Pluto"],["Yes/No","No"]],
+   memory:"The tree loses every leaf and it does not panic. It trusts. Death in tarot almost never means physical death — it means transformation. The leaf must fall so the spring bud can grow. When you see the bare tree, ask: what needs to fall away so I can bloom?",
+   upright:{general:"Transformation, endings and beginnings, release. Something must end for something new to be born.",love:"End of a relationship phase or the relationship itself. Profound transformation in how you love.",career:"A major career ending or transformation. A chapter closes — another opens.",finance:"Financial transformation — debts ending, old patterns dying, a fresh financial start.",feelings:"In transition, grief mixed with relief, transformative.",actions:"Let it end. Grieve what must go. Trust that the roots remain."},
+   reversed:{general:"Resistance to change, stagnation, inability to let go.",love:"Refusing to let a relationship end even when it's over.",career:"Clinging to a role or path that has already ended.",finance:"Refusing necessary financial restructuring.",feelings:"Stagnant, terrified of change, stuck in what was.",actions:"What are you refusing to release? The resistance is causing the suffering, not the ending."}},
+
+  {id:"major-14",pile:"major",name:"Temperance",num:"XIV",symbol:"🦢",art:"🦢",
+   artDesc:"A heron stands at the water's edge — one foot on land, one foot in water. It bridges two worlds with perfect stillness. It waits with infinite patience, poised between the worlds.",
+   symbols:["Heron: patience, precision, balance","One foot in water/one on land: bridging emotion and earth","Stillness: the middle way, alchemy in waiting"],
+   corr:[["Element","Fire"],["Planet","Sagittarius/Jupiter"],["Yes/No","Yes"]],
+   memory:"The heron stands between worlds without falling. It doesn't rush. It blends patience with precision and — strike. Temperance is the art of the middle way. When you see the heron, breathe: slow down, blend, find the balance.",
+   upright:{general:"Balance, patience, moderation, alchemy. You are being asked to blend and harmonize — not choose.",love:"A balanced, harmonious relationship. Taking love slowly and patiently.",career:"Finding the middle path at work, patience in long-term projects, collaborative blending.",finance:"Balanced budget, moderate spending, patient investment.",feelings:"Patient, harmonious, spiritually balanced.",actions:"Slow down. Find the middle. Don't force either extreme."},
+   reversed:{general:"Imbalance, excess, impatience, clashing forces.",love:"Relationship imbalance, one partner giving too much or too little.",career:"Burnout from extremes, lack of moderation.",finance:"Imbalanced finances, either extreme frugality or overspending.",feelings:"Scattered, imbalanced, overwhelmed.",actions:"Where are you living in excess? Bring yourself back to center."}},
+
+  {id:"major-15",pile:"major",name:"The Devil",num:"XV",symbol:"🐐",art:"🐐",
+   artDesc:"Two goats are chained together — but look closely. The chains are loose. They could slip free at any moment. They are not truly imprisoned — they believe they are. The devil is the illusion of bondage.",
+   symbols:["Chained goats: addictions, bindings, false captivity","Loose chains: the illusion of bondage — you CAN leave","Two goats: codependence, mutual entrapment"],
+   corr:[["Element","Earth"],["Planet","Capricorn/Saturn"],["Yes/No","No"]],
+   memory:"The chains are loose. This is the entire message of The Devil card — you could leave, but you don't. Something keeps you. Addiction, fear, habit, pleasure, a relationship that holds you through familiarity. The power is always yours. The chains are always loose.",
+   upright:{general:"Bondage, addiction, materialism, shadow work. You are held by something — examine it honestly.",love:"A relationship based on obsession, codependency, or unhealthy attraction.",career:"A job you hate but can't leave, materialism driving you, unhealthy work patterns.",finance:"Enslaved to debt, materialism, or addictive spending.",feelings:"Trapped, obsessed, seduced, unable to break free.",actions:"Examine what holds you. The chains are looser than you think. What would happen if you tried to leave?"},
+   reversed:{general:"Breaking free, reclaiming power, releasing addictions.",love:"Releasing a toxic relationship, breaking codependent patterns.",career:"Breaking free from a soul-crushing job or unhealthy work dynamic.",finance:"Getting out of debt, breaking free from materialism.",feelings:"Liberated, empowered, clear-eyed.",actions:"The moment of release. Act now — the chains are already loose."}},
+
+  {id:"major-16",pile:"major",name:"The Tower",num:"XVI",symbol:"⚡",art:"⚡",
+   artDesc:"A tower struck by lightning shatters from the top down. The structure cannot survive the truth. In The Wild Unknown, this appears as stark, violent lines — lightning ripping apart what has been built on a false foundation.",
+   symbols:["Tower: false structures, ego constructs","Lightning: sudden revelation, divine disruption","Falling figures: forced descent into truth"],
+   corr:[["Element","Fire"],["Planet","Mars"],["Yes/No","No"]],
+   memory:"The tower built on sand cannot stand when truth arrives. The lightning doesn't hate the tower — it simply reveals what was always unstable. Tower moments are brutal and necessary. After the fall, the ground is clear. Remember: the lightning is on your side.",
+   upright:{general:"Sudden disruption, revelation, structures falling. A shock that was necessary. Truth arriving violently.",love:"A sudden revelation changes the relationship. A necessary upheaval.",career:"Sudden job loss, company collapse, necessary disruption of a career structure.",finance:"Financial shock, sudden loss. The unstable structure finally gives.",feelings:"Shocked, destabilized, in chaos — but also potentially relieved.",actions:"Don't rebuild the same tower. Sit with the rubble. What was false is now gone."},
+   reversed:{general:"Avoiding necessary change, a disaster averted, or a slower breakdown.",love:"Avoiding the necessary conversation that would change everything.",career:"Resisting inevitable change at work, internal collapse without external action.",finance:"Financial instability building slowly rather than all at once.",feelings:"Anxious, sensing something about to break.",actions:"What needs to fall that you're holding up? Let the truth arrive."}},
+
+  {id:"major-17",pile:"major",name:"The Star",num:"XVII",symbol:"⭐",art:"⭐",
+   artDesc:"A great white deer stands under a vast, star-filled sky. The deer is luminous against the dark — serene, otherworldly, unhurt despite the darkness. Hope made flesh.",
+   symbols:["White deer: purity, hope, healing","Stars: guidance, the cosmic","Darkness with stars: hope found in the dark, not despite it"],
+   corr:[["Element","Air"],["Planet","Aquarius/Uranus"],["Yes/No","Yes"]],
+   memory:"After the Tower falls, the deer appears in the night. It is unafraid of the dark because it carries its own light. The Star always follows chaos — it is the promise of healing. When you see the luminous deer, breathe: you are being renewed.",
+   upright:{general:"Hope, healing, renewal, divine guidance. After the storm, the stars emerge. You are being watched over.",love:"Healing in love, hope renewed, a relationship that feels divinely guided.",career:"Inspiration, renewed purpose, hope for the future of your work.",finance:"Financial hope returning, things looking up, renewed optimism.",feelings:"Hopeful, peaceful, healing, spiritually connected.",actions:"Receive the healing. Let hope return. You are guided."},
+   reversed:{general:"Hopelessness, lack of faith, spiritual disconnect.",love:"Losing hope in love, disconnection from the magic in relationship.",career:"Losing hope about your career path, feeling uninspired.",finance:"Financial despair, inability to see a way forward.",feelings:"Hopeless, lost, cut off from the stars.",actions:"Reconnect with hope. Find one small star in the darkness and fix your eyes on it."}},
+
+  {id:"major-18",pile:"major",name:"The Moon",num:"XVIII",symbol:"🌕",art:"🌕",
+   artDesc:"A moth is drawn to the moon — compelled, dreamlike, uncertain if the light it follows is real or illusion. The moon illuminates nothing clearly. Shadows shift. The path is uncertain.",
+   symbols:["Moth: drawn to light, illusion, the unconscious pull","Moon: dreams, the unconscious, cycles, deception","Dark path: the unknown, fear, the not-yet-revealed"],
+   corr:[["Element","Water"],["Planet","Pisces/Neptune"],["Yes/No","Wait"]],
+   memory:"The moth follows a light it cannot fully see. The Moon card lives in the between — not dark, not light, but the in-between world of dreams, fears, and the unconscious. When you see the moth at the moon, ask: what am I following that I cannot clearly see?",
+   upright:{general:"Illusion, fear, the unconscious, the unknown. Not everything is as it seems. Trust your intuition over your eyes.",love:"Uncertainty in love, illusions, things not being what they appear.",career:"Deception, confusion, or creative inspiration from the unconscious.",finance:"Unclear financial situation. Don't make decisions until things become clearer.",feelings:"Anxious, dreamy, confused, pulled by unclear longings.",actions:"Don't force clarity. Sit with the uncertainty. Journal your dreams."},
+   reversed:{general:"Confusion lifting, illusions revealed, facing fears.",love:"The truth in a relationship becoming clear. Releasing illusions.",career:"Confusion clearing at work, seeing a situation for what it really is.",finance:"Financial clarity returning. Hidden information comes to light.",feelings:"Emerging from confusion, relief as things become clearer.",actions:"What illusion are you ready to release? The light is coming."}},
+
+  {id:"major-19",pile:"major",name:"The Sun",num:"XIX",symbol:"☀",art:"☀",
+   artDesc:"A brilliant sunflower faces the full light of the sun — wide open, radiant, entirely itself. No shadow, no ambiguity. Just joy, clarity, and pure light. The sunflower cannot exist without turning toward the sun.",
+   symbols:["Sunflower: joy, clarity, natural alignment","Full sun: consciousness, success, vitality","Open face: no hiding, pure expression"],
+   corr:[["Element","Fire"],["Planet","Sun"],["Yes/No","Yes"]],
+   memory:"The sunflower turns toward the sun without being told to. It's in its nature. The Sun card is like this: joy and success are your nature. When you see the sunflower fully open in the light, something in you should relax. This is the best card in the deck.",
+   upright:{general:"Joy, success, vitality, clarity, and warmth. Everything is illuminated. This is a very positive card.",love:"A joyful, radiant relationship. Happiness in love. A relationship that gives you energy.",career:"Success, recognition, a career that lights you up.",finance:"Financial abundance, success, prosperity.",feelings:"Joyful, energized, clear, radiant, confident.",actions:"Shine. You don't have to dim yourself. Step into your light."},
+   reversed:{general:"Clouded joy, temporary setback, blocked happiness.",love:"Joy temporarily blocked in a relationship, or refusing to let yourself be happy.",career:"Success delayed, or inability to enjoy your accomplishments.",finance:"Financial joy blocked by pessimism or temporary setback.",feelings:"Sad, unable to feel joy, hiding your light.",actions:"Find the sun again. What is blocking your joy? Remove it."}},
+
+  {id:"major-20",pile:"major",name:"Judgement",num:"XX",symbol:"🦅",art:"🦅",
+   artDesc:"An eagle rises from darkness, wings spread to their full span, ascending toward light. Below it, the shed skin of what it was. This is not flight for escape — it is flight toward purpose.",
+   symbols:["Eagle ascending: awakening, rising to one's calling","Wings fully spread: readiness, full capacity","Shed skin below: the past self released"],
+   corr:[["Element","Fire"],["Planet","Pluto"],["Yes/No","Yes"]],
+   memory:"The eagle sheds what it was and rises — not higher in the world's eyes, but higher in its own truth. Judgement is the call to be who you truly are. When you see the eagle ascending, hear the call: it's time to rise into your real self.",
+   upright:{general:"Awakening, reckoning, a calling. You are being summoned to your higher purpose. Answer the call.",love:"A relationship calling both people to grow. A significant romantic reckoning.",career:"A career calling, a vocation becoming clear, a purposeful new direction.",finance:"A financial reckoning — honestly assessing where you are to plan the future.",feelings:"Awakened, called, clear, ready.",actions:"Answer your calling. What have you been ignoring? Rise."},
+   reversed:{general:"Ignoring the call, self-doubt, refusing to be accountable.",love:"Refusing to face what a relationship truly needs.",career:"Ignoring your true calling, avoiding a necessary career reckoning.",finance:"Avoiding facing financial reality.",feelings:"Stuck, guilty, afraid of your own potential.",actions:"You know what you're being called to. Stop avoiding it."}},
+
+  {id:"major-21",pile:"major",name:"The World",num:"XXI",symbol:"🌍",art:"🌍",
+   artDesc:"A snake coils in a perfect circle, biting its own tail — the ouroboros. The beginning and the end are the same. The journey is complete, and in that completion, a new journey is already beginning.",
+   symbols:["Ouroboros snake: completion, wholeness, cycles","Circle: totality, the complete journey","Snake eating its tail: endings become beginnings"],
+   corr:[["Element","Earth"],["Planet","Saturn"],["Yes/No","Yes"]],
+   memory:"The snake of The Fool's beginning returns here — but now it has become its own wholeness. The World is completion: you have traveled the full journey and integrated all of it. When you see the ouroboros, celebrate — and prepare. A new cycle is already beginning.",
+   upright:{general:"Completion, wholeness, success, integration. A major cycle is complete. You made it.",love:"A relationship reaching wholeness, a significant milestone, or a complete union.",career:"Major career achievement, completion of a significant project, success.",finance:"Financial completion: a debt paid, a goal reached.",feelings:"Whole, fulfilled, accomplished, ready for what comes next.",actions:"Celebrate. Then rest. Then look: a new door is already opening."},
+   reversed:{general:"Incomplete endings, not fully closing chapters, delayed completion.",love:"A relationship not fully resolving, loose ends preventing new growth.",career:"Almost finished but not crossing the finish line. Stagnation near the end.",finance:"A financial goal almost reached but not quite completed.",feelings:"Almost there but not quite, slightly frustrated.",actions:"Finish what you started. Complete the cycle so a new one can truly begin."}}
+];
+
+const MINOR_TEMPLATE = (suit, element, theme) => [
+  {name:`Ace of ${suit}`,symbol:"✨",art:"✨",artDesc:`A single powerful image of pure ${element} energy — the seed of all ${theme} potential.`,
+   symbols:[`Single point: pure potential`,`${element} energy: the essence of ${suit}`],
+   corr:[["Element",element],["Number","1 — New beginnings"],["Yes/No","Yes"]],
+   memory:`The Ace is the seed. Everything the ${suit} can be is contained in this one image. Pure, undiluted, new.`,
+   upright:{general:`Pure new energy in the realm of ${theme}. An incredible gift or opportunity arriving.`,love:`A powerful new romantic beginning. Emotional gift offered.`,career:`A fresh, inspired new career opportunity.`,finance:`New financial opportunity presenting itself.`,feelings:`Excited, inspired, full of potential.`,actions:`Receive this gift. Say yes to the new beginning.`},
+   reversed:{general:`Blocked ${theme} energy. A gift refused or delayed.`,love:`Emotional opportunity not taken or not yet ready.`,career:`New opportunity blocked or not yet the right time.`,finance:`Financial opportunity missed or blocked.`,feelings:`Blocked, deflated, resistant.`,actions:`Examine what is blocking you from receiving.`}},
+
+  {name:`Two of ${suit}`,symbol:"⟐",art:"⟐",artDesc:`Two forces in ${element} — in partnership, in balance, or in gentle tension.`,
+   symbols:[`Duality: balance, choice, partnership`,`${element}: the flavor of the interaction`],
+   corr:[["Element",element],["Number","2 — Balance & Choice"],["Yes/No","Maybe"]],
+   memory:`The 2 is always about two: two people, two paths, two feelings held simultaneously.`,
+   upright:{general:`Balance, partnership, or a decision between two equal paths.`,love:`A meaningful partnership, mutual attraction, or a choice between two loves.`,career:`A collaboration or a career choice to make.`,finance:`Balancing finances, a financial partnership.`,feelings:`Content, balanced, somewhat uncertain.`,actions:`Find the balance. Make the choice with an open heart.`},
+   reversed:{general:`Imbalance, indecision, an uneasy truce.`,love:`Relationship imbalance or difficulty choosing.`,career:`Inability to decide, poor partnership dynamics.`,finance:`Financial imbalance.`,feelings:`Torn, uneasy.`,actions:`Acknowledge the imbalance. Decide.`}},
+
+  {name:`Three of ${suit}`,symbol:"△",art:"△",artDesc:`Three elements of ${element} come together — creation, expansion, the first fruits of collaboration.`,
+   symbols:[`Three: the first real expansion`,`Creation: something new born from combination`],
+   corr:[["Element",element],["Number","3 — Growth & Creation"],["Yes/No","Yes"]],
+   memory:`Three is the first number of true creation — one plus one makes three (something new). Creativity, growth, early success.`,
+   upright:{general:`Growth, creativity, first results appearing. Something is blooming in the realm of ${theme}.`,love:`A deepening relationship, connection growing, or adding a third dimension (like a child or shared project).`,career:`Initial career success, a project taking shape.`,finance:`Initial financial growth, early returns on investment.`,feelings:`Creative, hopeful, growing.`,actions:`Nurture what is beginning to grow. Build on early success.`},
+   reversed:{general:`Stagnation, creative block, early efforts not yielding results.`,love:`Relationship stagnation, communication issues.`,career:`Projects stalling, collaborative friction.`,finance:`Slow financial growth or early losses.`,feelings:`Frustrated, blocked.`,actions:`Identify what is blocking growth. Change one thing.`}},
+
+  {name:`Four of ${suit}`,symbol:"□",art:"□",artDesc:`Four points of ${element} — a stable structure, a moment of rest, a foundation built.`,
+   symbols:[`Four: stability, structure, foundation`,`Rest within ${element}: consolidation`],
+   corr:[["Element",element],["Number","4 — Stability & Rest"],["Yes/No","Maybe"]],
+   memory:`Four is the number of structure — four corners make a room. A stable, perhaps static energy. Rest or stagnation, depending on context.`,
+   upright:{general:`Stability, rest, consolidation. A time to pause and appreciate what you have built.`,love:`Security in love, a stable if perhaps quiet relationship phase.`,career:`Job security, stable work environment, time to consolidate.`,finance:`Financial stability, savings, solid foundation.`,feelings:`Secure, resting, content.`,actions:`Rest and appreciate. Don't mistake stability for stagnation.`},
+   reversed:{general:`Restlessness, desire to move after stability, emerging from a stagnant period.`,love:`Breaking out of a relationship rut, ready to grow again.`,career:`Ready to leave stability for something more dynamic.`,finance:`Moving money that was stagnant, ready to invest.`,feelings:`Restless, ready to move.`,actions:`What are you ready to break out of?`}},
+
+  {name:`Five of ${suit}`,symbol:"✶",art:"✶",artDesc:`Five is disruption — the energy of ${element} challenged, conflict arising, lessons arriving through difficulty.`,
+   symbols:[`Five: conflict, disruption, challenge`,`Turbulence in ${element}`],
+   corr:[["Element",element],["Number","5 — Conflict & Change"],["Yes/No","No"]],
+   memory:`Fives are difficult everywhere in tarot — conflict, disruption, loss. But they are teachers. The five is where you grow because you have to.`,
+   upright:{general:`Conflict, loss, difficulty in the realm of ${theme}. A challenging but necessary disruption.`,love:`Conflict in love, arguments, hurt feelings.`,career:`Workplace conflict, job loss risk, challenging circumstances.`,finance:`Financial loss or conflict over money.`,feelings:`Distressed, in conflict, challenged.`,actions:`Don't avoid the difficulty. What can you learn from this conflict?`},
+   reversed:{general:`Resolution of conflict, moving past the difficult period.`,love:`Healing after relationship conflict.`,career:`Conflict at work resolving, moving through difficulty.`,finance:`Financial hardship easing.`,feelings:`Relieved, emerging from difficulty.`,actions:`The worst is passing. Begin to heal.`}},
+
+  {name:`Six of ${suit}`,symbol:"✡",art:"✡",artDesc:`Six brings harmony after five's disruption — generosity, healing, and the beauty of ${element} restored.`,
+   symbols:[`Six: harmony, healing, generosity`,`Balance restored within ${element}`],
+   corr:[["Element",element],["Number","6 — Harmony & Healing"],["Yes/No","Yes"]],
+   memory:`After the storm of five, six is the rainbow. Generosity, healing, nostalgia. Things coming back into balance.`,
+   upright:{general:`Harmony, generosity, healing. Balance restored in ${theme}.`,love:`Loving generosity, healing in a relationship, nostalgia and care.`,career:`Harmonious work environment, generous support from colleagues.`,finance:`Generosity with money, giving and receiving in balance.`,feelings:`Warm, generous, healing, nostalgic.`,actions:`Give and receive with equal grace.`},
+   reversed:{general:`Strings attached to generosity, past wounds resurfacing, imbalance in giving and receiving.`,love:`Conditional love, not receiving care you need.`,career:`Credit not given, one-sided work relationships.`,finance:`Giving without receiving, financial strings attached.`,feelings:`Resentful, feeling owed.`,actions:`Examine the conditions attached to what you give or receive.`}},
+
+  {name:`Seven of ${suit}`,symbol:"⌬",art:"⌬",artDesc:`Seven brings mystery and inner work — the spiritual number where ${element} turns inward. Dreams, choices, illusions.`,
+   symbols:[`Seven: mystery, inner work, assessment`,`Internal ${element} landscape`],
+   corr:[["Element",element],["Number","7 — Reflection & Assessment"],["Yes/No","Maybe"]],
+   memory:`Seven is the spiritual number — beyond the physical (six) into the mystical. Assessment, choices amid options, seeing through illusion.`,
+   upright:{general:`Assessment, inner work, many options — choose wisely. Don't let ${theme} illusions lead you astray.`,love:`Many suitors or choices; seeing a relationship clearly.`,career:`Assessing career options, seeing through workplace illusions.`,finance:`Many financial options; choose with discernment.`,feelings:`Reflective, imaginative, slightly uncertain.`,actions:`Assess carefully. Which of your options is real, and which is illusion?`},
+   reversed:{general:`Confusion, wishful thinking, poor choices in ${theme}.`,love:`Rose-tinted glasses in love, choosing fantasy over reality.`,career:`Deceiving yourself about a career situation.`,finance:`Wishful financial thinking, poor investment choices.`,feelings:`Confused, self-deceiving.`,actions:`Look clearly at the reality of your situation.`}},
+
+  {name:`Eight of ${suit}`,symbol:"∞",art:"∞",artDesc:`Eight is momentum and power — the figure-eight of infinite flow as ${element} moves with purpose and skill.`,
+   symbols:[`Eight: momentum, power, mastery`,`Skilled movement within ${element}`],
+   corr:[["Element",element],["Number","8 — Momentum & Mastery"],["Yes/No","Yes"]],
+   memory:`Eight is the number of infinity and power — things are moving now, with skill and momentum. Not forced — flowing.`,
+   upright:{general:`Rapid movement, flow, skilled action in ${theme}. Things are moving fast.`,love:`Relationships progressing quickly, passionate movement forward.`,career:`Rapid career advancement, projects moving at speed.`,finance:`Money moving, quick financial action.`,feelings:`Energized, in flow, things coming together.`,actions:`Move with the momentum. Don't overthink — act.`},
+   reversed:{general:`Stagnation, slowed progress, blocked momentum.`,love:`Relationship stalled, no progress forward.`,career:`Career plateau, unable to gain momentum.`,finance:`Stagnant finances, money not moving.`,feelings:`Frustrated, stuck.`,actions:`What is blocking the flow? Remove the obstacle.`}},
+
+  {name:`Nine of ${suit}`,symbol:"◉",art:"◉",artDesc:`Nine is near-completion — the fullness of ${element} before the final integration. Almost there.`,
+   symbols:[`Nine: near-completion, fullness`,`Peak of ${element} experience`],
+   corr:[["Element",element],["Number","9 — Fulfillment & Near-Completion"],["Yes/No","Yes"]],
+   memory:`Nine is the number of near-completion — everything is full. The harvest is almost in. One more step.`,
+   upright:{general:`Fulfillment, near-completion, abundance in ${theme}. You are almost there.`,love:`A deeply fulfilling relationship, emotional abundance.`,career:`Near the top, career fulfillment, independence.`,finance:`Financial fulfillment, near-total security.`,feelings:`Content, fulfilled, almost there.`,actions:`Appreciate how far you've come. The final step is close.`},
+   reversed:{general:`Unfulfillment, the last step blocked, not quite reaching completion.`,love:`Relationship just short of what you need.`,career:`Almost reaching a goal but blocked.`,finance:`Financial goal just out of reach.`,feelings:`So close yet frustrated, wanting more.`,actions:`Identify the final step. What is keeping you from completion?`}},
+
+  {name:`Ten of ${suit}`,symbol:"⊕",art:"⊕",artDesc:`Ten is the completion — the full expression of ${element} in the world. End and beginning.`,
+   symbols:[`Ten: completion, the full cycle`,`${element} fully expressed and integrated`],
+   corr:[["Element",element],["Number","10 — Completion & Transition"],["Yes/No","Yes"]],
+   memory:`Ten carries ALL the energy of the suit — at its peak, which can be glorious or overwhelming. Completion before the next cycle.`,
+   upright:{general:`Completion of a ${theme} cycle. Full expression — for better or worse. The end of a chapter.`,love:`A relationship reaching its final form — whether that's deep commitment or a necessary ending.`,career:`A career chapter closing completely.`,finance:`Financial cycle complete.`,feelings:`Complete, full, ready for what's next.`,actions:`Honor the ending. What is complete? Let it be complete.`},
+   reversed:{general:`Resisting a necessary ending, the cycle not fully completed.`,love:`Unable to let a relationship complete its natural arc.`,career:`Clinging to a career chapter that has run its course.`,finance:`Financial cycle that hasn't fully resolved.`,feelings:`Overwhelmed, unable to move on.`,actions:`Accept the completion. Let the cycle end so the new one can begin.`}},
+
+  {name:`Page of ${suit}`,symbol:"🌱",art:"🌱",artDesc:`The Page is a young seeker — curious, open, just beginning to understand the gifts of ${element}.`,
+   symbols:[`Page: youth, new student, messages`,`Beginner's mind in ${element}`],
+   corr:[["Element",element],["Type","Court — Youth/Messages"],["Yes/No","Maybe"]],
+   memory:`The Page is the eager student — full of wonder, still learning. Like a child with a gift they haven't fully unwrapped yet.`,
+   upright:{general:`News arriving, a new student beginning, youthful ${theme} energy. Open curiosity.`,love:`New relationship energy, a message about love, playful romantic beginning.`,career:`A new job or beginning, learning a new skill, a career message.`,finance:`New financial information arriving.`,feelings:`Curious, eager, open, youthful.`,actions:`Approach this like a student. Be curious. Ask questions. Begin.`},
+   reversed:{general:`Immaturity, bad news, not ready to receive.`,love:`Immature love, a relationship not ready to progress.`,career:`Not ready for the opportunity, immature approach.`,finance:`Financial naivety, a bad financial message.`,feelings:`Immature, not ready, afraid of commitment.`,actions:`What do you need to learn before you're ready?`}},
+
+  {name:`Knight of ${suit}`,symbol:"⚡",art:"⚡",artDesc:`The Knight moves with passionate action — the full momentum of ${element} in motion.`,
+   symbols:[`Knight: action, momentum, the quest`,`${element} in full expression`],
+   corr:[["Element",element],["Type","Court — Action/Quest"],["Yes/No","Yes"]],
+   memory:`The Knight is always on the move — fast, passionate, sometimes reckless. Full of ${element} energy with all its gifts and risks.`,
+   upright:{general:`Action, movement, passionate pursuit in ${theme}. Things are moving.`,love:`Passionate romantic pursuit, an exciting new suitor, or a relationship moving fast.`,career:`Ambitious career action, a driven opportunity.`,finance:`Decisive financial action.`,feelings:`Passionate, driven, energized.`,actions:`Move decisively. Take action toward what you want.`},
+   reversed:{general:`Recklessness, impulsivity, action without direction.`,love:`Rushing, not thinking before acting in love.`,career:`Impulsive career decisions, reckless action.`,finance:`Reckless financial decisions.`,feelings:`Restless, impulsive, scattered.`,actions:`Slow down before acting. Channel the energy purposefully.`}},
+
+  {name:`Queen of ${suit}`,symbol:"🌕",art:"🌕",artDesc:`The Queen is the mature feminine mastery of ${element} — nurturing, wise, fully at home in ${theme}.`,
+   symbols:[`Queen: mastery, wisdom, nurturing authority`,`Feminine ${element} fully integrated`],
+   corr:[["Element",element],["Type","Court — Mastery/Nurture"],["Yes/No","Yes"]],
+   memory:`The Queen has mastered ${element}. She doesn't strive — she embodies. She can offer this to others because she first cultivated it in herself.`,
+   upright:{general:`Mastery and nurturing in ${theme}. A wise, mature energy. Offering gifts from a place of completeness.`,love:`A deeply loving, wise, emotionally mature partner or relationship.`,career:`Confident, nurturing leadership. Career mastery with warmth.`,finance:`Wise, generous financial management.`,feelings:`Wise, nurturing, emotionally mature, grounded.`,actions:`Embody your mastery. Lead from abundance, not scarcity.`},
+   reversed:{general:`Immaturity, manipulation, smothering, emotional unavailability.`,love:`Emotional manipulation, over-nurturing turning controlling.`,career:`Using emotional power inappropriately at work.`,finance:`Financial manipulation or emotional spending.`,feelings:`Moody, controlling, emotionally unavailable.`,actions:`Reclaim your true power through authenticity, not control.`}},
+
+  {name:`King of ${suit}`,symbol:"👑",art:"👑",artDesc:`The King is the mature masculine mastery of ${element} — authority, wisdom, and full command in ${theme}.`,
+   symbols:[`King: authority, mastery, leadership`,`Masculine ${element} at its peak`],
+   corr:[["Element",element],["Type","Court — Authority/Mastery"],["Yes/No","Yes"]],
+   memory:`The King has earned his throne through experience and mastery. He leads with wisdom, not just power. He is ${element} embodied and integrated.`,
+   upright:{general:`Authority, mastery, and wise leadership in ${theme}. Experience and competence at their peak.`,love:`A stable, loyal, experienced partner. A relationship with mature love.`,career:`Executive leadership, career authority, being the master of your domain.`,finance:`Financial mastery, wealthy through wisdom.`,feelings:`Authoritative, wise, in command.`,actions:`Lead. Use your mastery to create, not just to possess.`},
+   reversed:{general:`Tyranny, abuse of power, immaturity in authority.`,love:`Domineering or cold partner, power imbalance.`,career:`Misuse of authority, a tyrant in the workplace.`,finance:`Financial domination or recklessness from entitlement.`,feelings:`Controlling, cold, domineering.`,actions:`Examine where power has become control. Reclaim integrity.`}}
+];
+
+const SUITS = {
+  cups:{element:"Water",theme:"emotion & relationships",pileKey:"cups"},
+  wands:{element:"Fire",theme:"passion & creativity",pileKey:"wands"},
+  pentacles:{element:"Earth",theme:"material & physical",pileKey:"pentacles"},
+  swords:{element:"Air",theme:"mind & truth",pileKey:"swords"}
+};
+
+Object.entries(SUITS).forEach(([suit,info]) => {
+  const suitCap = suit.charAt(0).toUpperCase()+suit.slice(1,-1)+(suit==="swords"?"s":"s");
+  const suitName = suit.charAt(0).toUpperCase()+suit.slice(1,-1)+(suit.endsWith('s')?'':'s');
+  const template = MINOR_TEMPLATE(suit.charAt(0).toUpperCase()+suit.slice(1,-1)+(suit==='swords'?'s':suit==='cups'?'s':suit==='wands'?'s':'s'), info.element, info.theme);
+  template.forEach((c,i)=>{
+    c.id=`${suit}-${i}`;
+    c.pile=suit;
+    c.num=["Ace","2","3","4","5","6","7","8","9","10","Page","Knight","Queen","King"][i];
+  });
+  CARDS.push(...template);
+});
+
+let currentPile = null;
+let currentCard = null;
+let readingMode = 'upright';
+
+function showHome(){
+  document.getElementById('home').style.display='flex';
+  document.getElementById('pile-view').style.display='none';
+  document.getElementById('card-view').style.display='none';
+}
+
+function showPile(pile){
+  currentPile = pile;
+  const p = PILES[pile];
+  document.getElementById('home').style.display='none';
+  document.getElementById('pile-view').style.display='block';
+  document.getElementById('card-view').style.display='none';
+  document.getElementById('pile-view-title').textContent=p.name;
+  document.getElementById('pile-view-desc').textContent=p.desc;
+  const cards = CARDS.filter(c=>c.pile===pile);
+  const grid = document.getElementById('cards-grid');
+  grid.innerHTML = cards.map(c=>`
+    <div class="card-thumb" onclick="showCard('${c.id}')">
+      <span class="card-thumb-symbol">${c.symbol}</span>
+      <div class="card-thumb-name">${c.name}</div>
+      <div class="card-thumb-num">${c.num||''}</div>
+    </div>
+  `).join('');
+}
+
+function backToPile(){
+  showPile(currentPile);
+}
+
+function showCard(id){
+  const c = CARDS.find(x=>x.id===id);
+  if(!c) return;
+  currentCard = c;
+  readingMode = 'upright';
+  document.getElementById('home').style.display='none';
+  document.getElementById('pile-view').style.display='none';
+  document.getElementById('card-view').style.display='block';
+  document.getElementById('cv-symbol').textContent = c.symbol;
+  document.getElementById('cv-name').textContent = c.name;
+  const pileNames={major:'Major Arcana',cups:'Cups · Minor Arcana',wands:'Wands · Minor Arcana',pentacles:'Pentacles · Minor Arcana',swords:'Swords · Minor Arcana'};
+  document.getElementById('cv-arcana').textContent = pileNames[c.pile]+(c.num?' · '+c.num:'');
+  document.getElementById('cv-art').textContent = c.art;
+  document.getElementById('cv-art-desc').textContent = c.artDesc;
+  document.getElementById('cv-symbols').innerHTML = c.symbols.map(s=>`<span class="sym-tag">${s}</span>`).join('');
+  document.getElementById('cv-corr').innerHTML = c.corr.map(([l,v])=>`<div class="corr-chip"><span class="corr-label">${l}</span><span class="corr-value">${v}</span></div>`).join('');
+  document.getElementById('cv-memory').textContent = c.memory;
+  renderMeanings(c, 'upright');
+  document.getElementById('btn-upright').classList.add('active');
+  document.getElementById('btn-reversed').classList.remove('active');
+  document.getElementById('card-view').scrollTop = 0;
+  window.scrollTo(0,0);
+}
+
+function setMode(mode){
+  readingMode = mode;
+  document.getElementById('btn-upright').classList.toggle('active', mode==='upright');
+  document.getElementById('btn-reversed').classList.toggle('active', mode==='reversed');
+  if(currentCard) renderMeanings(currentCard, mode);
+}
+
+function renderMeanings(c, mode){
+  const data = c[mode];
+  const cats = [
+    {key:'general',icon:'✦',label:'General'},
+    {key:'love',icon:'♡',label:'Love'},
+    {key:'career',icon:'◈',label:'Career'},
+    {key:'finance',icon:'◇',label:'Finances'},
+    {key:'feelings',icon:'◉',label:'As Feelings'},
+    {key:'actions',icon:'▷',label:'As Actions'}
+  ];
+  document.getElementById('cv-meanings').innerHTML = cats.map(cat=>`
+    <div class="meaning-section">
+      <span class="meaning-icon">${cat.icon}</span>
+      <div class="meaning-cat">${cat.label}</div>
+      <div class="meaning-upright">${data[cat.key]}</div>
+    </div>
+  `).join('');
+}
+
+function initStars(){
+  const canvas = document.getElementById('starCanvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  for(let i=0;i<120;i++){
+    const x = Math.random()*canvas.width;
+    const y = Math.random()*canvas.height;
+    const r = Math.random()*1.2;
+    ctx.beginPath();
+    ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fillStyle = `rgba(255,255,255,${Math.random()*0.4+0.1})`;
+    ctx.fill();
+  }
+}
+
+initStars();
+showHome();
+</script>
+</body>
+</html>
